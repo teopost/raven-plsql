@@ -1,15 +1,24 @@
-raven-oracle
+raven-plsql
 ============
 
-Sentry client on PL/SQL
+PL/SQL client for Sentry
+
+Installation
+===
+1. Get the code: git clone git://github.com/teopost/raven-plsql
+2. Connect su oracle database
+3. Cut & Paste Procedure code and execute
 
 Example
 ===
+```sql
+app.getsentry.com/api/29639
 
+exec RavenClient('app.getsentry.com/api/29639', 'cff7fad696c346e8966d0b0c82439df8', '79df31b6aa9642a3bef837f21f4132f1', 'This is a test', 'fatal')
 
-    exec RavenClient('http://sentry.apexnet.it/api/12', 'cff7fad696c346e8966d0b0c82439df8', '79df31b6aa9642a3bef837f21f4132f1', 'This is a test', 'fatal')
+```
 
-
+Note: Use http://sentry.apexnet.it/api/12 for ApexNet internal Sentry server
 
 Reference
 ===
