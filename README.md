@@ -6,8 +6,8 @@ PL/SQL client for Sentry
 Installation
 ===
 1. Get the code: git clone git://github.com/teopost/raven-plsql
-2. Connect su oracle database
-3. Cut & Paste Procedure code and execute
+2. Connect to Oracle Database
+3. Cut & Paste Procedure stored procedure code and execute it
 4. Enable Oracle ACL for remote connection (see official documentation)
 
 Example
