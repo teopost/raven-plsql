@@ -1,17 +1,20 @@
 CREATE OR REPLACE procedure SYS.RavenClient(uri varchar2, public_key varchar2, public_secret varchar2, message varchar2, errlevel varchar2 := 'warning')
 as
+-- Valid values for level are: fatal, error, warning, info, debug
+
 req utl_http.req;
 res utl_http.resp;
 url varchar2(4000) := uri || '/store/';  -- 'http://sentry.apexnet.it/api/12/store/';
 name varchar2(500);
-utctime varchar2(4000);
 buffer varchar2(4000); 
-sentry_auth varchar2(2000) := 'Sentry sentry_version=5,sentry_timestamp=$sentry_time,sentry_key=$sentry_public,sentry_secret=$sentry_secret';
+dbversion varchar2(2000);
 
-content varchar2(4000) := '
+sentry_auth varchar2(2000);
+
+payload varchar2(4000) := '
 {
   "event_id": "$gui",
-  "culprit": "ravenclient",
+  "culprit": "$culprit",
   "timestamp": "2011-05-02T17:41:36",
   "message": "$message",
   "platform": "plsql",
@@ -19,56 +22,61 @@ content varchar2(4000) := '
   "level": "$level",
   "tags": {
     "oracle_version": "$dbversion",
-    "sid": "$oraclesid"
+    "sid": "$oraclesid",
+    "current_schema": "$current_schema"
   },
   "exception": [
     {
-      "type": "SyntaxError",
-      "value": "Wattttt!",
-      "module": "__builtins__"
+      "type": "Error type",
+      "value": "Error value",
+      "module": "Module"
     }
   ]
 }';
 
 
-begin
-content:=replace(content, '$gui', lower(SYS_GUID()));
-content:=replace(content, '$message', message);
 
--- Valid values for level: fatal, error, warning, info, debug
-content:=replace(content, '$level', errlevel);
-content:=replace(content, '$servername', sys_context('USERENV','SERVER_HOST'));
-content:=replace(content, '$oraclesid', sys_context('USERENV','SID'));
-content:=replace(content, '$dbversion', sys_context('USERENV','SERVER_HOST'));
+begin
+-- Extract Oracle Version
+select banner into dbversion from v$version where banner like 'Oracle%';
+
+payload:=replace(payload, '$gui', lower(SYS_GUID()));
+payload:=replace(payload, '$culprit', 'RavenClient');
+-- add timestamp
+payload:=replace(payload, '$message', message);
+payload:=replace(payload, '$servername', sys_context('USERENV','SERVER_HOST'));
+payload:=replace(payload, '$level', errlevel);
+
+payload:=replace(payload, '$dbversion', dbversion);
+payload:=replace(payload, '$oraclesid', sys_context('USERENV','SID'));
+payload:=replace(payload, '$current_schema', sys_context('USERENV','CURRENT_SCHEMA'));
+
+payload:=replace(payload, chr(13), '');
+payload:=replace(payload, chr(10), '');
+payload:=ltrim(rtrim(payload));
+
+-- Compose header
+sentry_auth := 'Sentry sentry_version=5,sentry_timestamp=$sentry_time,sentry_key=$sentry_public,sentry_secret=$sentry_secret';
 sentry_auth:=replace(sentry_auth, '$sentry_time', replace(to_char( SYS_EXTRACT_UTC(SYSTIMESTAMP),'YYYY-MM-DD HH24:MI:SS'),' ','T'));
 sentry_auth:=replace(sentry_auth, '$sentry_public', public_key);
 sentry_auth:=replace(sentry_auth, '$sentry_secret', public_secret);
-dbms_output.put_line(sentry_auth);
-content:=replace(content, chr(13), '');
-content:=replace(content, chr(10), '');
-content:=ltrim(rtrim(content));
-dbms_output.put_line(content);
--- http://cff7fad696c346e8966d0b0c82439df8:79df31b6aa9642a3bef837f21f4132f1@sentry.apexnet.it/12/store/
 
 
+-- Compose request
 req := utl_http.begin_request(url, 'POST',' HTTP/1.1');
-utl_http.set_header(req, 'User-agent', 'raven-oracle'); 
-utl_http.set_header(req, 'Content-Type', 'application/json;charset=UTF-8'); 
+utl_http.set_header(req, 'User-agent', 'raven-oracle/1.0'); 
+utl_http.set_header(req, 'payload-Type', 'application/json;charset=UTF-8'); 
 utl_http.set_header(req, 'Accept', 'application/json'); 
 --utl_http.set_header(req, 'X-Sentry-Auth', 'Sentry sentry_version=5,sentry_timestamp=1328055286.51,sentry_key=cff7fad696c346e8966d0b0c82439df8,sentry_secret=79df31b6aa9642a3bef837f21f4132f1');
 utl_http.set_header(req, 'X-Sentry-Auth', sentry_auth); 
+utl_http.set_header (req, 'Content-Length', lengthb(payload));
+utl_http.write_raw(req, utl_raw.cast_to_raw(payload));
 
---utl_http.set_header(req, 'Content-Length', length(content));
-UTL_HTTP.SET_HEADER (r      =>   req,
-                     name   =>   'Content-Length',
-                     value  =>    LENGTHB(content));
-                     
-UTL_HTTP.WRITE_RAW (r    => req,  data => UTL_RAW.CAST_TO_RAW(content));
-
---utl_http.write_text(req, content);
+-- debug messages
+-- dbms_output.put_line(sentry_auth);
+-- dbms_output.put_line(payload);
 
 res := utl_http.get_response(req);
-
 
 begin
     loop
