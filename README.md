@@ -8,7 +8,40 @@ Installation
 1. Get the code: git clone git://github.com/teopost/raven-plsql
 2. Connect to Oracle Database
 3. Cut & Paste Procedure stored procedure code and execute it
-4. Enable Oracle ACL for remote connection (see official documentation)
+4. Enable Oracle ACL for remote connection
+
+Oracle ACL
+===
+Connect to Oracle sys user, replace ORACLE_SCHEMA with your Oracle schema name and execute script.
+
+```sql
+/* Create ACL for user ORACLE_SCHEMA */
+BEGIN 
+  DBMS_NETWORK_ACL_ADMIN.CREATE_ACL (
+     acl => 'raven-plsql.xml', 
+     description => 'Acl for sentry service', 
+     principal => 'ORACLE_SCHEMA',
+     is_grant => true, 
+     privilege => 'connect'); 
+  commit; 
+END;
+/
+
+/* Add privilege of ACL to user ORACLE_SCHEMA */
+BEGIN 
+  DBMS_NETWORK_ACL_ADMIN.ADD_PRIVILEGE
+    (acl => 'raven-plsql.xml', principal => 'ORACLE_SCHEMA',is_grant => true, privilege => 'resolve'); 
+  commit; 
+END;
+/
+
+BEGIN 
+  DBMS_NETWORK_ACL_ADMIN.ASSIGN_ACL 
+    (acl => 'raven-plsql.xml', host => 'sentry.apexnet.it'); 
+  commit; 
+END;
+/
+```
 
 Example
 ===
