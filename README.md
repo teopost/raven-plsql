@@ -4,14 +4,14 @@ raven-plsql
 PL/SQL client for Sentry
 
 Installation
-===
+---
 1. Get the code: git clone git://github.com/teopost/raven-plsql
 2. Connect to Oracle Database
 3. Cut & Paste Procedure stored procedure code and execute it
 4. Enable Oracle ACL for remote connection
 
 Oracle ACL
-===
+---
 Connect to Oracle sys user, replace ORACLE_SCHEMA with your Oracle schema name and execute script.
 
 ```sql
@@ -53,6 +53,6 @@ exec RavenClient('app.getsentry.com/api/29639', 'cff7fad696c346e8966d0b0c82439df
 Note: Use http://sentry.apexnet.it/api/12 for ApexNet internal Sentry server
 
 Reference
-===
+---
 http://www.oracleflash.com/36/Oracle-11g-Access-Control-List-for-External-Network-Services.html
 http://sentry.readthedocs.org/en/latest/developer/client/index.html
