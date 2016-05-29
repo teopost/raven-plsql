@@ -7,8 +7,8 @@ Installation
 ---
 1. Get the code: git clone git://github.com/teopost/raven-plsql
 2. Connect to Oracle Database
-3. Cut & Paste Procedure stored procedure code and execute it
-4. Enable Oracle ACL for remote connection
+3. Enable Oracle ACL for remote connection
+4. Cut & Paste stored procedure into oracle schema
 
 Oracle ACL
 ---
