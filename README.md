@@ -50,7 +50,7 @@ exec RavenClient('app.getsentry.com/api/29639', 'cff7fad696c346e8966d0b0c82439df
 
 ```
 
-Note: Use http://sentry.apexnet.it/api/12 for ApexNet internal Sentry server
+Note: Use http://sentry.apexnet.it/api/12 only for WEDO internal Sentry server
 
 Reference
 ---
